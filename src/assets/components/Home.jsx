@@ -1,127 +1,177 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
-import {
-  Github,
-  Linkedin,
-  Mail,
-  ExternalLink,
-  Instagram,
-  Flame,
-} from 'lucide-react';
+import React, { memo, useEffect } from 'react';
 import Spline from '@splinetool/react-spline';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
+import { gsap } from 'gsap';
 
-// Memoized Components
-const StatusBadge = memo(() => (
-  <div
-    className="inline-block animate-float lg:mx-0"
-    data-aos="zoom-in"
-    data-aos-delay="400"
-  >
-    <div className="relative group">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-full blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
-      <div className="relative px-3 sm:px-4 py-2 rounded-full bg-black/40 backdrop-blur-xl border border-white/10">
-        <span className="bg-gradient-to-r from-[#6366f1] to-[#a855f7] text-transparent bg-clip-text sm:text-sm text-[0.7rem] font-medium flex items-center">
-          <Flame className="sm:w-4 sm:h-4 w-3 h-3 mr-2 text-blue-400" />
-          Rendilo divertente, goditi ciò che crei!
-        </span>
-      </div>
-    </div>
-  </div>
-));
+// Add the horizontalLoop function here
+function horizontalLoop(items, config) {
+  items = gsap.utils.toArray(items);
+  config = config || {};
+  let tl = gsap.timeline({
+    repeat: config.repeat,
+    paused: config.paused,
+    defaults: { ease: 'none' },
+    onReverseComplete: () => tl.totalTime(tl.rawTime() + tl.duration() * 100),
+  });
+  let length = items.length;
+  let startX = items[0].offsetLeft;
+  let times = [];
+  let widths = [];
+  let xPercents = [];
+  let curIndex = 0;
+  let pixelsPerSecond = (config.speed || 1) * 100;
+  let snap =
+    config.snap === false ? (v) => v : gsap.utils.snap(config.snap || 1);
+  let totalWidth;
+  let curX;
+  let distanceToStart;
+  let distanceToLoop;
+  let item;
+  let i;
 
-const MainTitle = memo(() => (
-  <div className="space-y-2" data-aos="fade-up" data-aos-delay="600">
-    <h1 className="text-5xl sm:text-6xl md:text-6xl lg:text-6xl xl:text-7xl font-bold tracking-tight">
-      <span className="relative inline-block">
-        <span className="absolute -inset-2 bg-gradient-to-r from-[#6366f1] to-[#a855f7] blur-2xl opacity-20"></span>
-        <span className="relative bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
-          Full Stack
-        </span>
-      </span>
-      <br />
-      <span className="relative inline-block mt-2">
-        <span className="absolute -inset-2 bg-gradient-to-r from-[#6366f1] to-[#a855f7] blur-2xl opacity-20"></span>
-        <span className="relative bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent">
-          Developer
-        </span>
-      </span>
-    </h1>
-  </div>
-));
+  gsap.set(items, {
+    xPercent: (i, el) => {
+      let w = (widths[i] = parseFloat(gsap.getProperty(el, 'width', 'px')));
+      xPercents[i] = snap(
+        (parseFloat(gsap.getProperty(el, 'x', 'px')) / w) * 100 +
+          gsap.getProperty(el, 'xPercent')
+      );
+      return xPercents[i];
+    },
+  });
 
-const CTAButton = memo(({ href, text, icon: Icon }) => (
-  <a href={href}>
-    <button className="group relative w-[160px]">
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-[#4f52c9] to-[#8644c5] rounded-xl opacity-50 blur-md group-hover:opacity-90 transition-all duration-700"></div>
-      <div className="relative h-11 bg-[#030014] backdrop-blur-xl rounded-lg border border-white/10 leading-none overflow-hidden">
-        <div className="absolute inset-0 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500 bg-gradient-to-r from-[#4f52c9]/20 to-[#8644c5]/20"></div>
-        <span className="absolute inset-0 flex items-center justify-center gap-2 text-sm group-hover:gap-3 transition-all duration-300">
-          <span className="bg-gradient-to-r from-gray-200 to-white bg-clip-text text-transparent font-medium z-10">
-            {text}
-          </span>
-          <Icon
-            className={`w-4 h-4 text-gray-200 ${
-              text === 'Contact'
-                ? 'group-hover:translate-x-1'
-                : 'group-hover:rotate-45'
-            } transform transition-all duration-300 z-10`}
-          />
-        </span>
-      </div>
-    </button>
-  </a>
-));
+  gsap.set(items, { x: 0 });
 
-const SocialLink = memo(({ icon: Icon, link }) => (
-  <a href={link} target="_blank" rel="noopener noreferrer">
-    <button className="group relative p-3">
-      <div className="absolute inset-0 bg-gradient-to-r from-[#6366f1] to-[#a855f7] rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
-      <div className="relative rounded-xl bg-black/50 backdrop-blur-xl p-2 flex items-center justify-center border border-white/10 group-hover:border-white/20 transition-all duration-300">
-        <Icon className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-      </div>
-    </button>
-  </a>
-));
+  totalWidth =
+    items[length - 1].offsetLeft +
+    (xPercents[length - 1] / 100) * widths[length - 1] -
+    startX +
+    items[length - 1].offsetWidth *
+      gsap.getProperty(items[length - 1], 'scaleX') +
+    (parseFloat(config.paddingRight) || 0);
 
-// Constants
-const SOCIAL_LINKS = [
-  { icon: Github, link: 'https://github.com/konnychiwa' },
-  { icon: Linkedin, link: 'https://www.linkedin.com/in/pamoda-angelo-konara/' },
-  { icon: Instagram, link: 'https://www.instagram.com/angelo.konara/' },
-];
+  for (i = 0; i < length; i++) {
+    item = items[i];
+    curX = (xPercents[i] / 100) * widths[i];
+    distanceToStart = item.offsetLeft + curX - startX;
+    distanceToLoop =
+      distanceToStart + widths[i] * gsap.getProperty(item, 'scaleX');
+
+    tl.to(
+      item,
+      {
+        xPercent: snap(((curX - distanceToLoop) / widths[i]) * 100),
+        duration: distanceToLoop / pixelsPerSecond,
+      },
+      0
+    )
+      .fromTo(
+        item,
+        {
+          xPercent: snap(
+            ((curX - distanceToLoop + totalWidth) / widths[i]) * 100
+          ),
+        },
+        {
+          xPercent: xPercents[i],
+          duration:
+            (curX - distanceToLoop + totalWidth - curX) / pixelsPerSecond,
+          immediateRender: false,
+        },
+        distanceToLoop / pixelsPerSecond
+      )
+      .add('label' + i, distanceToStart / pixelsPerSecond);
+
+    times[i] = distanceToStart / pixelsPerSecond;
+  }
+
+  function toIndex(index, vars) {
+    vars = vars || {};
+    Math.abs(index - curIndex) > length / 2 &&
+      (index += index > curIndex ? -length : length); // always go in the shortest direction
+    let newIndex = gsap.utils.wrap(0, length, index),
+      time = times[newIndex];
+    if (time > tl.time() !== index > curIndex) {
+      // if we're wrapping the timeline's playhead, make the proper adjustments
+      vars.modifiers = { time: gsap.utils.wrap(0, tl.duration()) };
+      time += tl.duration() * (index > curIndex ? 1 : -1);
+    }
+    curIndex = newIndex;
+    vars.overwrite = true;
+    return tl.tweenTo(time, vars);
+  }
+
+  tl.next = (vars) => toIndex(curIndex + 1, vars);
+  tl.previous = (vars) => toIndex(curIndex - 1, vars);
+  tl.current = () => curIndex;
+  tl.toIndex = (index, vars) => toIndex(index, vars);
+  tl.times = times;
+  tl.progress(1, true).progress(0, true); // pre-render for performance
+  if (config.reversed) {
+    tl.vars.onReverseComplete();
+    tl.reverse();
+  }
+
+  return tl;
+}
 
 const Home = () => {
-  const [text, setText] = useState('');
-  const [isTyping, setIsTyping] = useState(true);
-  const [wordIndex, setWordIndex] = useState(0);
-  const [charIndex, setCharIndex] = useState(0);
-
-  // Optimize AOS initialization
   useEffect(() => {
-    const initAOS = () => {
-      AOS.init({
-        once: true,
-        offset: 10,
-      });
-    };
+    // Select the text elements
+    const textItems = gsap.utils.toArray('.scrolling-text span');
 
-    initAOS();
-    window.addEventListener('resize', initAOS);
-    return () => window.removeEventListener('resize', initAOS);
+    // Initialize the horizontal loop with the text elements
+    const loop = horizontalLoop(textItems, {
+      speed: 0.5, // Adjust the speed of movement (this is the number of pixels per second)
+      repeat: -1, // The loop will repeat indefinitely
+      paddingRight: 50, // Optionally adjust the padding
+    });
+
+    // Start the animation automatically
+    loop.play(); // Automatically start the animation
+
+    // Optional: You can adjust any other functionality like pausing or reversing as needed.
   }, []);
 
   return (
     <div
-      className="min-h-screen bg-[#030014] overflow-hidden relative"
+      className="min-h-screen bg-[#F5F1E3] overflow-hidden relative"
       id="Home"
     >
-      {/* Full-screen scalable Spline model*/}
-      <div className="md:flex absolute inset-0 w-full h-full items-center justify-center">
+      {/* Full-screen scalable Spline model in front of the text */}
+      <div className="md:flex absolute inset-0 w-full h-full items-center justify-center z-10">
         <Spline
-          scene="https://prod.spline.design/kHk9eJDto-TdqiAZ/scene.splinecode"
+          scene="https://prod.spline.design/BhCg4hiQ4mJIlT6H/scene.splinecode"
           className="w-full h-full max-w-none"
         />
+      </div>
+
+      {/* Text that scrolls behind the Spline model */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '25%',
+          left: '0',
+          fontSize: '3rem',
+          whiteSpace: 'nowrap',
+          color: '#1C1C1C',
+          zIndex: 0, // The text is behind the model
+          display: 'flex',
+        }}
+        className="scrolling-text font-[Great_Vibes] font-normal not-italic bg-[#dea193]"
+      >
+        {/* Duplicate the text to create a seamless scrolling effect */}
+        <span>
+          Vento Splendore Luce Prezioso Eleganza Brillante Aurora Incanto Magia
+          Sogno Regalità Tesoro Inestimabile Perla Zaffiro Gemma Veneziano
+          Morbido Luminosa Raffinatezza Fascino Armonia Vibrante Sofisticato
+          Pregevole Risplendere Aurora Lux Fiamma
+        </span>
+        <span>
+          Splendore Luce Prezioso Eleganza Brillante Aurora Incanto Magia Sogno
+          Regalità Tesoro Inestimabile Perla Zaffiro Gemma Veneziano Morbido
+          Luminosa Raffinatezza Fascino Armonia Vibrante Sofisticato Pregevole
+          Risplendere Aurora Lux Fiamma Vento
+        </span>
       </div>
     </div>
   );
