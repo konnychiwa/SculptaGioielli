@@ -53,32 +53,31 @@ const Navbar = () => {
           <div className="flex-shrink-0">
             <Link
               to="/"
-              className="text-xl font-bold bg-gradient-to-r from-[#8f00ff] to-[#6366f1] bg-clip-text text-transparent flex items-center cursor-pointer"
+              className="text-3xl font-bold font-[Playfair_Display] text-[#1C1C1C] flex items-center cursor-pointer"
             >
-              Konny
+              Sculpta Gioielli
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:block">
-            <div className="ml-8 flex items-center space-x-8">
+            <div className="font-[Montserrat] flex items-center ml-8 space-x-8">
               {navItems.map((item) => (
                 <Link
                   key={item.label}
                   to={item.path}
-                  className="group relative px-1 py-2 text-sm font-medium"
+                  className="group relative px-1 py-2 text-md font-medium"
                 >
                   <span
                     className={`relative z-10 transition-colors duration-300 ${
                       activeSection === item.path
-                        ? 'bg-gradient-to-r from-[#8f00ff] to-[#a855f7] bg-clip-text text-transparent font-semibold'
-                        : 'text-[#e2d3fd] group-hover:text-white'
+                        ? 'text-[#1C1C1C] font-semibold'
+                        : 'text-[#1C1C1C] group-hover:text-[#dea193]'
                     }`}
                   >
                     {item.label}
                   </span>
                   <span
-                    className={`absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-[#8f00ff] to-[#a855f7] transform origin-left transition-transform duration-300 ${
+                    className={`absolute bottom-0 left-0 w-full h-0.5 bg-[#dea193] transform origin-left transition-transform duration-300 ${
                       activeSection === item.path
                         ? 'scale-x-100'
                         : 'scale-x-0 group-hover:scale-x-100'

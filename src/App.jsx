@@ -6,13 +6,11 @@ import Anelli from './assets/pages/Anelli';
 import Orecchini from './assets/pages/Orecchini';
 import Collane from './assets/pages/Collane';
 import Footer from './assets/components/Footer';
-import SubNavbar from './assets/components/SubNavbar';
 
 function App() {
   return (
     <div>
       <Navbar />
-      <SubNavbar />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/bracciali" element={<Bracciali />} />
